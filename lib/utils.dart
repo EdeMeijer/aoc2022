@@ -17,3 +17,19 @@ extension NumberRanges on int {
 extension StringIterations on String {
   Iterable<String> chars() => 0.until(length).map((i) => this[i]);
 }
+
+extension IterableChunking<T> on Iterable<T> {
+  Iterable<List<T>> chunk(int size) sync* {
+    List<T> next = [];
+    for (final item in this) {
+      next.add(item);
+      if (next.length == size) {
+        yield next;
+        next = [];
+      }
+    }
+    if (next.isNotEmpty) {
+      yield next;
+    }
+  }
+}
