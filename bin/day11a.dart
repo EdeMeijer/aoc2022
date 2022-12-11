@@ -3,8 +3,8 @@ import 'dart:collection';
 import 'package:aoc2022/data.dart';
 
 Future<void> main() async {
-  var input = await loadDataString(11);
-  var troop = input.split('\n\n').map(parseMonkey).toList();
+  final input = await loadDataString(11);
+  final troop = input.split('\n\n').map(parseMonkey).toList();
 
   for (var i = 0; i < 20; i ++) {
     runRound(troop);
@@ -32,7 +32,7 @@ class Monkey {
 Monkey parseMonkey(String input) {
   final lines = input.split('\n');
   var parts = lines[1].split(':');
-  var items = parts[1].split(',').map((e) => int.parse(e.trim()));
+  final items = parts[1].split(',').map((e) => int.parse(e.trim()));
 
   parts = lines[2].split(' ');
   final operator = parts[parts.length - 2];
@@ -48,10 +48,10 @@ void runMonkey(List<Monkey> troop, Monkey monkey) {
   while (monkey.items.isNotEmpty) {
     monkey.inspections++;
     var item = monkey.items.removeFirst();
-    var operand = monkey.operand == -1 ? item : monkey.operand;
+    final operand = monkey.operand == -1 ? item : monkey.operand;
     item = (monkey.operator == '*' ? item * operand : item + operand) ~/ 3;
 
-    var target = item % monkey.divisor == 0 ? monkey.trueTarget : monkey.falseTarget;
+    final target = item % monkey.divisor == 0 ? monkey.trueTarget : monkey.falseTarget;
     troop[target].items.addLast(item);
   }
 }

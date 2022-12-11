@@ -3,11 +3,12 @@ import 'dart:collection';
 import 'package:aoc2022/data.dart';
 
 Future<void> main() async {
-  var input = await loadDataString(11);
-  var troop = input.split('\n\n').map(parseMonkey).toList();
+  final input = await loadDataString(11);
+  final troop = input.split('\n\n').map(parseMonkey).toList();
+  final mod = troop.fold(1, (v, m) => v * m.divisor);
 
   for (var i = 0; i < 10000; i ++) {
-    runRound(troop);
+    runRound(troop, mod);
   }
 
   final activity = troop.map((e) => e.inspections).toList();
@@ -18,46 +19,21 @@ Future<void> main() async {
 }
 
 class Monkey {
-  final Queue<Item> items = Queue<Item>();
+  final Queue<int> items = Queue<int>();
   final String operator;
   final int operand, divisor, trueTarget, falseTarget;
   int inspections = 0;
 
-  Monkey(Iterable<Item> items, this.operator, this.operand, this.divisor,
+  Monkey(Iterable<int> items, this.operator, this.operand, this.divisor,
       this.trueTarget, this.falseTarget) {
     this.items.addAll(items);
   }
 }
 
-class Item {
-  final int base;
-  final List<Operation> ops = [];
-
-  Item(this.base);
-
-  bool divisible(int divisor) {
-    var x = base % divisor;
-
-    for (var op in ops) {
-      var operand = op.operand == -1 ? x : op.operand;
-      x = (op.operator == '*' ? x * operand : x + operand) % divisor;
-    }
-
-    return x == 0;
-  }
-}
-
-class Operation {
-  final String operator;
-  final int operand;
-
-  const Operation(this.operator, this.operand);
-}
-
 Monkey parseMonkey(String input) {
   final lines = input.split('\n');
   var parts = lines[1].split(':');
-  var items = parts[1].split(',').map((e) => Item(int.parse(e.trim())));
+  final items = parts[1].split(',').map((e) => int.parse(e.trim()));
 
   parts = lines[2].split(' ');
   final operator = parts[parts.length - 2];
@@ -69,22 +45,20 @@ Monkey parseMonkey(String input) {
   return Monkey(items, operator, operand, divisor, trueTarget, falseTarget);
 }
 
-void runMonkey(List<Monkey> troop, Monkey monkey) {
+void runMonkey(List<Monkey> troop, Monkey monkey, int mod) {
   while (monkey.items.isNotEmpty) {
     monkey.inspections++;
-
     var item = monkey.items.removeFirst();
-    var op = Operation(monkey.operator, monkey.operand);
-    item.ops.add(op);
+    final operand = monkey.operand == -1 ? item : monkey.operand;
+    item = (monkey.operator == '*' ? item * operand : item + operand) % mod;
 
-
-    var target = item.divisible(monkey.divisor) ? monkey.trueTarget : monkey.falseTarget;
+    final target = item % monkey.divisor == 0 ? monkey.trueTarget : monkey.falseTarget;
     troop[target].items.addLast(item);
   }
 }
 
-void runRound(List<Monkey> troop) {
+void runRound(List<Monkey> troop, int mod) {
   for (var monkey in troop) {
-    runMonkey(troop, monkey);
+    runMonkey(troop, monkey, mod);
   }
 }
