@@ -1,4 +1,5 @@
 import 'package:aoc2022/data.dart';
+import 'package:aoc2022/spatial.dart';
 import 'package:aoc2022/utils.dart';
 
 Future<void> main() async {
@@ -25,23 +26,6 @@ const commands = {
   'L': Coord(-1, 0),
   'D': Coord(0, 1)
 };
-
-class Coord {
-  final int x, y;
-
-  const Coord(this.x, this.y);
-
-  Coord operator +(Coord other) => Coord(x + other.x, y + other.y);
-
-  Coord operator -(Coord other) => Coord(x - other.x, y - other.y);
-
-  @override
-  bool operator ==(Object other) =>
-      other is Coord && x == other.x && y == other.y;
-
-  @override
-  int get hashCode => Object.hash(x, y);
-}
 
 Iterable<Coord> parseCommand(String line) sync* {
   final parts = line.split(' ');

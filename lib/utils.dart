@@ -1,7 +1,9 @@
 import 'dart:math' as math;
 
-extension NumberReductions on Iterable<int> {
+extension IntReductions on Iterable<int> {
   int sum() => reduce((a, b) => a + b);
+
+  int min() => reduce((a, b) => math.min(a, b));
 
   int max() => reduce((a, b) => math.max(a, b));
 }
