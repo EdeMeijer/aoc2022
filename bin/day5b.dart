@@ -27,10 +27,10 @@ Future<void> main() async {
       .toList();
 
   for (final move in moves) {
-      final source = stacks[move[1] - 1];
-      final items = source.sublist(0, move[0]);
-      source.removeRange(0, move[0]);
-      stacks[move[2] - 1].insertAll(0, items);
+    final source = stacks[move[1] - 1];
+    final items = source.sublist(0, move[0]);
+    source.removeRange(0, move[0]);
+    stacks[move[2] - 1].insertAll(0, items);
   }
 
   final result = stacks.map((e) => e.first!).join();
