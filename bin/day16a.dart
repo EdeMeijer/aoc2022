@@ -1,5 +1,4 @@
 import 'dart:collection';
-import 'dart:math';
 
 import 'package:aoc2022/data.dart';
 import 'package:aoc2022/utils.dart';
@@ -8,17 +7,21 @@ Future<void> main() async {
   final input = await loadDataLines(16);
   final valves = Map.fromEntries(input.map(parse).map((e) => MapEntry(e.id, e)));
 
+  final relevantValves = valves.values.where((v) => v.rate > 0).map((v) => v.id).toSet();
+
   // BFS
   final start = SearchNode({}, 'AA');
   final queue = Queue<SearchNode>()..add(start);
   final potentialFlow = valves.values.map((e) => e.rate).sum();
-  final states = {start: State(0, 0, 0, potentialFlow)};
-  var highScore = 0;
+  final states = {start: State(0, 0, 0, potentialFlow, [])};
+  State? bestState;
 
   void includeCandidate(SearchNode node, State state) {
-    if (state.time == 30) {
-      // Time is up, register the result and stop here
-      highScore = max(highScore, state.realScore);
+    if (state.time == 30 || node.opened.length == relevantValves.length) {
+      // Time is up or we are done, register the result and stop here
+      if (bestState == null || state.potentialScore > bestState!.potentialScore) {
+        bestState = state;
+      }
       return;
     }
     if (!states.containsKey(node) || states[node]!.potentialScore < state.potentialScore) {
@@ -39,21 +42,22 @@ Future<void> main() async {
     // Consider moving to connected valves
     for (final target in targets) {
       final neighbor = SearchNode(next.opened, target);
-      final neighborState =
-          State(state.time + 1, state.realFlow, state.realScore + state.realFlow, state.potentialFlow);
+      final neighborState = State(state.time + 1, state.realFlow, state.realScore + state.realFlow, state.potentialFlow,
+          [...state.actions, 'goto $target']);
       includeCandidate(neighbor, neighborState);
     }
 
     // Consider opening the current valve (if it has any rate at all)
-    if (!next.opened.contains(next.loc) && valve.rate > 0) {
+    if (!next.opened.contains(next.loc) && relevantValves.contains(next.loc)) {
       final neighbor = SearchNode(next.opened.toSet()..add(next.loc), next.loc);
       final neighborState = State(state.time + 1, state.realFlow + valve.rate, state.realScore + state.realFlow,
-          state.potentialFlow - valve.rate);
+          state.potentialFlow - valve.rate, [...state.actions, 'open valve']);
       includeCandidate(neighbor, neighborState);
     }
   }
 
-  print(highScore);
+  print(bestState!.actions);
+  print(bestState!.potentialScore);
 }
 
 class Valve {
@@ -89,8 +93,9 @@ class SearchNode {
 
 class State {
   final int time, realFlow, realScore, potentialFlow;
+  final List<String> actions;
 
-  const State(this.time, this.realFlow, this.realScore, this.potentialFlow);
+  State(this.time, this.realFlow, this.realScore, this.potentialFlow, this.actions);
 
-  int get potentialScore => realScore + (30 - time) * potentialFlow;
+  int get potentialScore => realScore + (30 - time) * (realFlow + potentialFlow);
 }
