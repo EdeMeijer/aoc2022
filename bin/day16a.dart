@@ -1,5 +1,4 @@
 import 'dart:collection';
-import 'dart:math';
 
 import 'package:aoc2022/data.dart';
 
@@ -30,13 +29,13 @@ Future<void> main() async {
     allDistances[origin] = distances;
   }
 
-  int evaluateOrder(Iterable<String> order) {
+  int getUpperBound(Iterable<String> partialSolution, Set<String> remaining) {
     var totalRate = 0;
     var score = 0;
     var cur = 'AA';
     var time = 0;
 
-    for (final target in order) {
+    for (final target in partialSolution) {
       final dist = allDistances[cur]![target]!;
       final nextTime = time + dist + 1;
       if (nextTime >= 30) {
@@ -50,44 +49,64 @@ Future<void> main() async {
       cur = target;
     }
 
-    // Wait out remaining time
+    // For the remaining nodes, compute an upper bound on the additional score they could provide. Just order them
+    // by flow rate, and pretend all their distances are always 1.
+    final remainingRates = remaining.map((e) => valves[e]!.rate).toList()..sort((a, b) => b.compareTo(a));
+    for (final rate in remainingRates) {
+      final nextTime = time + 2;
+      if (nextTime >= 30) {
+        // Time is up, cannot open next valve
+        break;
+      }
+
+      time = nextTime;
+      score += 2 * totalRate;
+      totalRate += rate;
+    }
+
+    // Wait out remaining time for the opened valves
     score += (30 - time) * totalRate;
+
     return score;
   }
 
   // Select valve IDs that have any flow
-  var useValves = valves.values.where((v) => v.rate > 0).map((e) => e.id).toSet();
-  var remainingValves = useValves.toSet();
+  var useValves = valves.values.where((v) => v.rate > 0).map((e) => e.id).toList();
 
-  // Select each next step by shuffling the rest of the solution many times and take the highest scores. Ugly.
-  List<String> solution = [];
-  const steps = 100000;
-  
-  for (var i = 0; i < useValves.length - 1; i ++) {
-    var winner = "";
-    var bestScore = 0;
+  var highScore = 0;
 
-    for (var candidate in remainingValves) {
-      var remainingAfter = remainingValves.where((v) => v != candidate).toList();
+  void solveRecursive(List<String> solution) {
+    final available = useValves.toSet()..removeAll(solution);
 
-      var maximum = 0;
-      for (var i = 0; i < steps; i ++) {
-        remainingAfter.shuffle();
-        maximum = max(maximum, evaluateOrder([...solution, candidate, ...remainingAfter]));
+    // We need to go deeper
+    final newAvailable = available.toSet();
+    final upperBounds = <String, int>{};
+    for (final candidate in available) {
+      newAvailable.remove(candidate);
+      final newSolution = [...solution, candidate];
+      final upperBound = getUpperBound(newSolution, newAvailable);
+      if (upperBound > highScore) {
+        upperBounds[candidate] = upperBound;
       }
-      if (maximum > bestScore) {
-        bestScore = maximum;
-        winner = candidate;
+      if (newAvailable.isEmpty) {
+        // End of search
+        if (upperBound > highScore) {
+          highScore = upperBound;
+        }
+        return;
       }
+      newAvailable.add(candidate);
     }
 
-    solution.add(winner);
-    remainingValves.remove(winner);
+    final entries = upperBounds.entries.toList()..sort((a, b) => b.value.compareTo(a.value));
+    for (var entry in entries) {
+      solveRecursive([...solution, entry.key]);
+    }
   }
-  solution.addAll(remainingValves);
 
-  print(solution);
-  print(evaluateOrder(solution));
+  solveRecursive([]);
+
+  print(highScore);
 }
 
 class Valve {
