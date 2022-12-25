@@ -1,7 +1,7 @@
 import 'dart:math' as math;
 
 extension IntReductions on Iterable<int> {
-  int sum() => reduce((a, b) => a + b);
+  int sum() => fold(0, (a, b) => a + b);
 
   int min() => reduce((a, b) => math.min(a, b));
 
@@ -32,6 +32,19 @@ extension IterableChunking<T> on Iterable<T> {
     }
     if (next.isNotEmpty) {
       yield next;
+    }
+  }
+}
+
+Iterable<List<T>> permute<T>(Set<T> items) sync* {
+  if (items.length == 1) {
+    yield items.toList();
+    return;
+  }
+  for (final item in items) {
+    final remaining = items.toSet()..remove(item);
+    for (final rest in permute(remaining)) {
+      yield [item, ...rest];
     }
   }
 }
