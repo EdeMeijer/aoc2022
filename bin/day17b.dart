@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'dart:math';
 
 import 'package:aoc2022/data.dart';
@@ -85,14 +84,15 @@ Future<void> main() async {
         // Stopped the block
         occupied.addAll(block.pixels);
 
-        for (var px in block.pixels) {
-          if (px.y > profile[px.x]) {
-            profile[px.x] = px.y;
+        if (useLoopDetection) {
+          for (var px in block.pixels) {
+            if (px.y > profile[px.x]) {
+              profile[px.x] = px.y;
+            }
           }
+          final maxProfile = profile.max();
+          normProfile = profile.map((v) => v - maxProfile).toList();
         }
-
-        final maxProfile = profile.max();
-        normProfile = profile.map((v) => v - maxProfile).toList();
 
         maxY = max(maxY, block.pixels.map((p) => p.y).max());
         break;
