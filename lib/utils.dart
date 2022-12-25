@@ -48,3 +48,12 @@ Iterable<List<T>> permute<T>(Set<T> items) sync* {
     }
   }
 }
+
+extension SetEquality<T> on Set<T> {
+  bool setEquals(Set<T> other) {
+    if (length != other.length) {
+      return false;
+    }
+    return difference(other).isEmpty;
+  }
+}
