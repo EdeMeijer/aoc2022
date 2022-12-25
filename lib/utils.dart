@@ -57,3 +57,18 @@ extension SetEquality<T> on Set<T> {
     return difference(other).isEmpty;
   }
 }
+
+
+extension ListEquality<T> on List<T> {
+  bool listEquals(List<T> other) {
+    if (length != other.length) {
+      return false;
+    }
+    for (var i = 0; i < length; i ++) {
+      if (this[i] != other[i]) {
+        return false;
+      }
+    }
+    return true;
+  }
+}
